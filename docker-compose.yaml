@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+    broker:
+        image: eclipse-mosquitto:latest
+        container_name: ec-broker
+        ports:
+            - "1883:1883"
+            - "9001:9001"
+        volumes:
+            - mosquitto.conf:/mosquitto/config/mosquitto.conf
+            - /mosquitto/data
+            - /mosquitto/log
+        restart: always
+        tty: true
+        networks:
+            - local_network_1
+    
+    iot_client:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: iot_client
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        networks:
+            - local_network_1
+
+networks:
+    local_network_1:
+        external: false
