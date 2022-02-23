@@ -12,10 +12,12 @@ RUN apt-get update -y && \
         unzip \
         vim \
         curl \
-        sudo
+        sudo \
+        nmap \
+        iproute2
 
-COPY ./requirements.txt /tmp/
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+# COPY ./requirements.txt /tmp/
+# RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # Create workking directory.
 RUN mkdir /app
