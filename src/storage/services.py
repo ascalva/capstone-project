@@ -1,6 +1,6 @@
 import threading
 
-from host_services import HostService
+from .host_services import HostService
 
 class ServiceTable :
     def __init__(self, neighbors) :
