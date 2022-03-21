@@ -12,9 +12,17 @@ class HostService :
 
         # TODO: Need garbage collector for stale services.
     
+
     def __str__(self) -> str:
         return f"row[{self.host}] : <{', '.join(self.createPacket())}>"
     
+
+    def markDirtyExcept(self, host) :
+        for neighbor in self.dirty_table.keys() :
+            if neighbor != host :
+                self.dirty_table[neighbor] = True
+
+
     def updateServices(self, data, sender) :
         if (services := set(data)) == self.services :
             return
@@ -22,18 +30,26 @@ class HostService :
         self.services = services
         self.origin   = sender
 
-        for neighbor in self.dirty_table.keys() :
-            if neighbor != self.origin :
-                self.dirty_table[neighbor] = True
+        self.markDirtyExcept(self.origin)
+    
+
+    def addService(self, service_name, host) :
+        self.services.add(service_name)
+        self.origin = host
+        self.markDirtyExcept(self.origin)
+
 
     def isDirty(self, neighbor) :
         return self.dirty_table[neighbor]
 
+
     def done(self, neighbor) :
         self.dirty_table[neighbor] = False
 
+
     def getBroker(self) :
         return self.host + "broker"
+
 
     def createPacket(self) :
         return list(self.services)
