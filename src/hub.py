@@ -77,9 +77,11 @@ class DBNode :
             time.sleep(5)
 
             for neighbor in self.graph.getNeighbors() :
+
+                # Prepare message, send, and update tracking to avoid redundant
+                # data replication/transmission.
                 message = self.prepareAdPacket(neighbor)
                 self.sock_send.sendto(message, (neighbor, self.sport))
-
                 self.table.markNeighborUTD(neighbor)
 
 
