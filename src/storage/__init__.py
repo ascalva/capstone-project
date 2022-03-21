@@ -1,1 +1,1 @@
-from services import ServiceTable
+from .services import ServiceTable
