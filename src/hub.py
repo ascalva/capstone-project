@@ -12,6 +12,9 @@ from common     import PacketType
 class DBNode :
 
     def __init__(self, hostname, port) -> None:
+        # TODO: Need to routinely check for updates to topology.
+        # TODO: Need way of updating topology in the case of node failure.
+
         self.graph  = Graph(hostname)
         self.host   = hostname
         self.table  = ServiceTable(self.graph.getNeighbors())
@@ -106,7 +109,6 @@ class DBNode :
                 print("=============================\n")
 
                 time.sleep(2)
-
 
 
 if __name__ == "__main__" :
