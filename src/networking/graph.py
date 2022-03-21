@@ -77,5 +77,5 @@ class Graph :
         plt.show()
 
 if __name__ == "__main__" :
-    g = Graph("A_", random_weights=True)
+    g = Graph("A_", random_weights=False)
     g.visualize()
