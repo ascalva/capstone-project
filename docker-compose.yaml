@@ -1,32 +1,77 @@
 version: "3.8"
 
 services:
-    broker:
-        image: eclipse-mosquitto:latest
-        container_name: ec-broker
-        ports:
-            - "1883:1883"
-            - "9001:9001"
-        volumes:
-            - mosquitto.conf:/mosquitto/config/mosquitto.conf
-            - /mosquitto/data
-            - /mosquitto/log
-        restart: always
-        tty: true
-        networks:
-            - local_network_1
+    # A_broker:
+    #     image: eclipse-mosquitto:latest
+    #     container_name: ec-broker
+    #     ports:
+    #         - "1883:1883"
+    #         - "9001:9001"
+    #     volumes:
+    #         - mosquitto.conf:/mosquitto/config/mosquitto.conf
+    #         - /mosquitto/data
+    #         - /mosquitto/log
+    #     restart: always
+    #     tty: true
+    #     networks:
+    #         - local_network_1
     
-    iot_client:
+    # iot_client:
+    #     build:
+    #         context: .
+    #         dockerfile: ./Dockerfiles/client.Dockerfile
+    #     container_name: iot_client
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     networks:
+    #         - local_network_1
+    
+    A_:
         build:
             context: .
             dockerfile: ./Dockerfiles/client.Dockerfile
-        container_name: iot_client
-        image: iot_client
+        container_name: A_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
         volumes:
             - ./:/app
-        tty: true
+        environment:
+            HOSTNAME: A_
         networks:
-            - local_network_1
+            local_network_1:
+
+    B_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: B_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: B_
+        networks:
+            local_network_1:
+        
+    C_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: C_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: C_
+        networks:
+            local_network_1:
 
 networks:
     local_network_1:
