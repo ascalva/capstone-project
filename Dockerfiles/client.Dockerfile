@@ -1,5 +1,7 @@
 FROM ubuntu:latest
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 ## Install Packages/Libraries ##
 RUN apt-get update -y && \
     apt-get install -y \
@@ -14,12 +16,14 @@ RUN apt-get update -y && \
         curl \
         sudo \
         nmap \
-        iproute2
+        iproute2 \
+        iptables \
+        net-tools \
+        nodejs
 
-# COPY ./requirements.txt /tmp/
-# RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+COPY ./requirements.txt /tmp/
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # Create workking directory.
 RUN mkdir /app
 WORKDIR   /app
-
