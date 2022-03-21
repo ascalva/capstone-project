@@ -1,30 +1,50 @@
 version: "3.8"
 
 services:
-    p1:
+    hub-net-1:
         image: python:latest
-        container_name: p1
+        container_name: hub-net-1
         restart: always
         tty: true
+        # ports:
+        #   - "8080:8080"
         networks:
             test-net-1:
-                ipv4_address: 172.16.1.3
-            test-net-2:
+                ipv4_address: 172.16.1.4
+            universal-net:
     
     ub:
         build:
             context: .
             dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: ub
-        command: sh -c "python3 networking.py"
         image: ub
         restart: always
         tty: true
         volumes:
             - ./:/app
+        environment:
+            HOSTNAME: ub
+        ports:
+          - "8080:8080"
+        networks:
+            test-net-1:
+                ipv4_address: 172.16.1.3
+            universal-net:
+    
+    broker-net-1:
+        image: eclipse-mosquitto:latest
+        container_name: ec-broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        #     - /mosquitto/data
+        #     - /mosquitto/log
+        restart: always
+        tty: true
         networks:
             test-net-1:
                 ipv4_address: 172.16.1.2
+            universal-net:
 
 networks:
     test-net-1:
@@ -42,3 +62,11 @@ networks:
             config:
                 - subnet: 172.16.2.0/24
                   gateway: 172.16.2.1
+
+    universal-net:
+      external: false
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.16.3.0/24
+            gateway: 172.16.3.1
