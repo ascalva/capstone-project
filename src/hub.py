@@ -5,11 +5,17 @@ import json
 import os
 import queue
 
-from networking import Graph, PacketType
-from storage    import ServiceTable
+from dataclasses import dataclass
+from networking  import Graph, PacketType
+from storage     import ServiceTable
 
 
 class DBNode :
+
+    @dataclass
+    class QueueMessage :
+        message : bytes
+        send_to : str
 
     def __init__(self, hostname, port) -> None:
         # TODO: Need to routinely check for updates to topology.
@@ -36,7 +42,16 @@ class DBNode :
         # Add to current host's services, will be broadcasted to neighbors.
         self.table.addServiceToHost(self.host, service_name)
 
-        # TODO: Add response to queue.
+        # Create response message and add to queue.
+        msg = json.dumps({
+            "sender" : self.host,
+            "broker" : self.host + "broker",
+            "type"   : PacketType.IOT_RESPONSE
+        }).encode("utf-8")
+
+        self.queue.put(
+            self.QueueMessage(message=msg, send_to=iot_hostname)
+        )
         
 
     def processPacket(self, packet) : 
@@ -99,11 +114,19 @@ class DBNode :
                 self.sock_send.sendto(message, (neighbor, self.sport))
                 self.table.markNeighborUTD(neighbor)
             
-            # TODO: Check msg queue.
+            # Send messages from queue.
+            while not self.queue.empty() :
+                data    = self.queue.get()
+                send_to = data.send_to
+                message = data.message
+
+                self.sock_send.sendto(message, (send_to, self.sport))
+                self.queue.task_done()
+
 
 
     def run(self) :
-        t = threading.Thread(target=self.listen)
+        t = threading.Thread(target=self.listen, daemon=True)
         t.start()
 
         ######## TEST CODE ########
