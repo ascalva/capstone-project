@@ -1,9 +1,11 @@
+import threading
+
 from .host_services import HostService
 from util           import RWLock
 
 class ServiceTable :
     def __init__(self, neighbors) :
-        self.lock      = RWLock()
+        self.lock      = threading.Lock()
         self.table     = {}
 
         # Keep list of neighbors for book keeping who is left to update.
@@ -11,10 +13,11 @@ class ServiceTable :
 
 
     def __str__(self) -> str:
-        self.lock.reader_acquire()
-
-        table_str = "\n".join([str(row) for row in self.table.values()])
-        self.lock.reader_release()
+        self.lock.acquire()
+        table_str  = "=========== TABLE ===========\n"
+        table_str += "\n".join([str(row) for row in self.table.values()])
+        table_str += "\n=============================\n"
+        self.lock.release()
         return table_str
     
 
@@ -35,15 +38,14 @@ class ServiceTable :
         # TODO: Check if there should be an update going to that node, need to send message if no.
         temp_table = {}
 
-        self.lock.reader_acquire()
+        # self.lock.acquire()
 
         for k, v in self.table.items() :
             if v.isDirty(send_to) :
                 temp_table[k] = v.createPacket()
         
-        self.lock.reader_release()
+        # self.lock.release()
 
-        print(f"Sending {send_to} the packet: {temp_table}")
         return temp_table, True
 
 
@@ -51,7 +53,7 @@ class ServiceTable :
         services = data["services"]
         sender   = data["sender"]
 
-        self.lock.writer_acquire()
+        self.lock.acquire()
 
         for k, v in services.items() :
             if k not in self.table :
@@ -60,7 +62,7 @@ class ServiceTable :
             else :
                 self.__updateHost(k, sender, v)
         
-        self.lock.writer_release()
+        self.lock.release()
 
 
     def __isDone(self) :
@@ -68,16 +70,16 @@ class ServiceTable :
 
 
     def markNeighborUTD(self, neighbor) :
-        self.lock.writer_acquire()
+        # self.lock.acquire()
 
         for row in self.table.values() : row.done(neighbor)
         
-        self.lock.writer_release()
+        # self.lock.release()
 
 
     def addServiceToHost(self, host, service_name) :
-        self.lock.writer_acquire()
+        self.lock.acquire()
 
         self.table[host].addService(service_name, host)
 
-        self.lock.writer_release()
+        self.lock.release()
