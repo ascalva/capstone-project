@@ -17,17 +17,19 @@ class DBNode :
         message : bytes
         send_to : str
 
-    def __init__(self, hostname, port) -> None:
+    def __init__(self, hostname, verbose=False) -> None:
         # TODO: Need to routinely check for updates to topology.
         # TODO: Need way of updating topology in the case of node failure.
 
-        self.host   = hostname
-        self.graph  = Graph(self.host)
-        self.table  = ServiceTable(self.graph.getNeighbors())
-        self.queue  = queue.Queue()
-        self.sport  = 8000
-        self.dport  = 8001
+        self.host    = hostname
+        self.verbose = verbose
+        self.graph   = Graph(self.host)
+        self.table   = ServiceTable(self.graph.getNeighbors())
+        self.queue   = queue.Queue()
+        self.sport   = 8000
+        self.dport   = 8001
 
+        # TODO: Switch to using TCP sockets instead of UDP sockets.
         self.sock_recv = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_recv.bind(("", self.sport))
 
@@ -52,6 +54,10 @@ class DBNode :
         self.queue.put(
             self.QueueMessage(message=msg, send_to=iot_hostname)
         )
+    
+    def dbhProcessStillAlive(self, data) :
+        sender = data["sender"]
+        # print(f"Node {sender} is still alive.")
         
 
     def processPacket(self, packet) : 
@@ -60,12 +66,37 @@ class DBNode :
             PacketType.IOT_REQUEST_TO_SUBSCRIBE : lambda _ : _,
             PacketType.IOT_RESPONSE             : lambda _ : _,
             PacketType.IOT_END                  : lambda _ : _,
-            PacketType.DBH_NOT_DEAD             : lambda _ : _,
+            PacketType.DBH_NOT_DEAD             : lambda data : self.dbhProcessStillAlive(data),
             PacketType.DBH_ADVERT               : lambda data : self.table.readPacket(data)
         }
 
         data = json.loads(packet.decode("utf-8"))
+        if self.verbose :
+            print(f"Recieved from {data['sender']} the packet:")
+            print(f"\t|-> Message type : {PacketType(data['type'])}")
+
+            if "services" in data :
+                print(f"\t|-> Service updates : {data['services']}")
+            print()
+
         getProcessor[data["type"]](data)
+
+
+    def sendStillAlive(self) :
+        while True :
+            time.sleep(10)
+
+            for neighbor in self.graph.getNeighbors() :
+
+                # Create still_alive message for every neighbor and add to queue.
+                msg = json.dumps({
+                    "sender" : self.host,
+                    "type"   : PacketType.DBH_NOT_DEAD
+                }).encode("utf-8")
+
+                self.queue.put(
+                    self.QueueMessage(message=msg, send_to=neighbor)
+                )
 
 
     def listen(self) :
@@ -105,14 +136,25 @@ class DBNode :
         # TODO: If we fail to send to a node, might need to be removed from neighbors/graph/everything.
         while True :
             time.sleep(5)
+            if self.verbose : print(self.table)
 
             for neighbor in self.graph.getNeighbors() :
 
-                # Prepare message, send, and update tracking to avoid redundant
-                # data replication/transmission.
-                message = self.prepareAdPacket(neighbor)
-                self.sock_send.sendto(message, (neighbor, self.sport))
-                self.table.markNeighborUTD(neighbor)
+                try :
+                    # Start transaction, don't release until complete.
+                    self.table.lock.acquire()
+
+                    # Prepare message, send, and update tracking to avoid redundant
+                    # data replication/transmission.
+                    message = self.prepareAdPacket(neighbor)
+                    self.sock_send.sendto(message, (neighbor, self.sport))
+                    self.table.markNeighborUTD(neighbor)
+
+                except socket.error as e :
+                    print(f"Error sending ad to {neighbor}: {e}")
+                
+                finally :
+                    self.table.lock.release()
             
             # Send messages from queue.
             while not self.queue.empty() :
@@ -122,35 +164,29 @@ class DBNode :
 
                 self.sock_send.sendto(message, (send_to, self.sport))
                 self.queue.task_done()
-
-
+    
 
     def run(self) :
-        t = threading.Thread(target=self.listen, daemon=True)
-        t.start()
+        
+        # Create thread for listening and thread of sending still_alive messages.
+        thread_listen      = threading.Thread(target=self.listen,         daemon=True)
+        thread_still_alive = threading.Thread(target=self.sendStillAlive, daemon=True)
+        thread_listen.start()
+        thread_still_alive.start()
 
         ######## TEST CODE ########
         if self.host == "A_" :
             self.table._ServiceTable__addHost(self.host, self.host, ["temperature", "pressure"])
-            self.runAdverts()
         
         elif self.host == "B_" :
-            time.sleep(2)
             self.table._ServiceTable__addHost(self.host, self.host, ["baby_monitor"])
-            self.runAdverts()
 
-        else :
-            while True :
-                print("=========== TABLE ===========")
-                print(self.table)
-                print("=============================\n")
-
-                time.sleep(2)
+        self.runAdverts()
 
 
 if __name__ == "__main__" :
     hostname = os.environ.get("HOSTNAME")
-    port     = 8080
+    verbose  = os.environ.get("VERBOSE_TABLE", "false") == "true"
 
-    g = DBNode(hostname, port)
+    g = DBNode(hostname, verbose=verbose)
     g.run()
