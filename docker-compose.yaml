@@ -8,7 +8,7 @@ services:
     #         - "1883:1883"
     #         - "9001:9001"
     #     volumes:
-    #         - mosquitto.conf:/mosquitto/config/mosquitto.conf
+    #         - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     #         - /mosquitto/data
     #         - /mosquitto/log
     #     restart: always
@@ -20,6 +20,7 @@ services:
     #     build:
     #         context: .
     #         dockerfile: ./Dockerfiles/client.Dockerfile
+    #     command: sh -c "sleep 30"
     #     container_name: iot_client
     #     image: iot_client
     #     volumes:
@@ -40,6 +41,7 @@ services:
             - ./:/app
         environment:
             HOSTNAME: A_
+            VERBOSE_TABLE: "false"
         networks:
             local_network_1:
 
@@ -55,6 +57,7 @@ services:
             - ./:/app
         environment:
             HOSTNAME: B_
+            VERBOSE_TABLE: "false"
         networks:
             local_network_1:
         
@@ -70,6 +73,71 @@ services:
             - ./:/app
         environment:
             HOSTNAME: C_
+            VERBOSE_TABLE: "false"
+        networks:
+            local_network_1:
+
+    D_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: D_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: D_
+            VERBOSE_TABLE: "true"
+        networks:
+            local_network_1:
+
+    E_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: E_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: E_
+            VERBOSE_TABLE: "false"
+        networks:
+            local_network_1:
+
+    F_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: F_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: F_
+            VERBOSE_TABLE: "false"
+        networks:
+            local_network_1:
+
+    G_:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        container_name: G_
+        image: db_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: G_
+            VERBOSE_TABLE: "true"
         networks:
             local_network_1:
 
