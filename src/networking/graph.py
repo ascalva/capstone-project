@@ -14,6 +14,8 @@ class Graph :
         self.readGraphFile(filename, random_weights)
         self.computeMST()
 
+        self.visualize()
+
 
     def __getitem__(self, node) :
         return self.mst[node]
@@ -58,7 +60,7 @@ class Graph :
         return list(self.g.nodes)
 
 
-    def visualize(self) :
+    def visualize(self, display=False) :
         val_map = {
             self.host : "#ff0000"
         }
@@ -74,7 +76,10 @@ class Graph :
         ax.margins(0.08)
         plt.axis("off")
         plt.tight_layout()
-        plt.show()
+
+        if display : plt.show()
+        else       : plt.savefig(fname=f"./images/{self.host}topology.png", dpi=100)
+
 
 if __name__ == "__main__" :
     g = Graph("A_", random_weights=False)
