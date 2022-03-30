@@ -1,33 +1,53 @@
 version: "3.8"
 
 services:
-    # A_broker:
-    #     image: eclipse-mosquitto:latest
-    #     container_name: ec-broker
-    #     ports:
-    #         - "1883:1883"
-    #         - "9001:9001"
-    #     volumes:
-    #         - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+    ############################# A Services ###################################
+    A_broker:
+        image: eclipse-mosquitto:latest
+        container_name: A_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     #         - /mosquitto/data
     #         - /mosquitto/log
-    #     restart: always
-    #     tty: true
-    #     networks:
-    #         - local_network_1
+        restart: always
+        tty: true
+        networks:
+            local-net-A:
+                # ipv4_address: 172.16.2.2
+            universal-net:
     
-    # iot_client:
-    #     build:
-    #         context: .
-    #         dockerfile: ./Dockerfiles/client.Dockerfile
-    #     command: sh -c "sleep 30"
-    #     container_name: iot_client
-    #     image: iot_client
-    #     volumes:
-    #         - ./:/app
-    #     tty: true
-    #     networks:
-    #         - local_network_1
+    A_iot_1:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        command: python3 src/iot_service.py
+        container_name: A_iot_1
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_1
+            TOPIC:    temperature
+        networks:
+            local-net-A:
+
+    A_iot_2:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        command: python3 src/iot_service.py
+        container_name: A_iot_2
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_2
+            TOPIC:    pressure
+        networks:
+            local-net-A:
     
     A_:
         build:
@@ -43,8 +63,11 @@ services:
             HOSTNAME: A_
             VERBOSE_TABLE: "false"
         networks:
-            local_network_1:
+            local-net-A:
+                # ipv4_address: 172.16.2.6
+            universal-net:
 
+    ############################# B Services ###################################
     B_:
         build:
             context: .
@@ -59,8 +82,39 @@ services:
             HOSTNAME: B_
             VERBOSE_TABLE: "false"
         networks:
-            local_network_1:
+            local-net-B:
+            universal-net:
         
+    B_broker:
+        image: eclipse-mosquitto:latest
+        container_name: B_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    #         - /mosquitto/data
+    #         - /mosquitto/log
+        restart: always
+        tty: true
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_1:
+        build:
+            context: .
+            dockerfile: ./Dockerfiles/client.Dockerfile
+        command: python3 src/iot_service.py
+        container_name: B_iot_1
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_1
+            TOPIC:    baby_monitor
+        networks:
+            local-net-B:
+
+    ########################### Other Services #################################
     C_:
         build:
             context: .
@@ -75,7 +129,7 @@ services:
             HOSTNAME: C_
             VERBOSE_TABLE: "false"
         networks:
-            local_network_1:
+            universal-net:
 
     D_:
         build:
@@ -91,7 +145,7 @@ services:
             HOSTNAME: D_
             VERBOSE_TABLE: "true"
         networks:
-            local_network_1:
+            universal-net:
 
     E_:
         build:
@@ -107,7 +161,7 @@ services:
             HOSTNAME: E_
             VERBOSE_TABLE: "false"
         networks:
-            local_network_1:
+            universal-net:
 
     F_:
         build:
@@ -123,7 +177,7 @@ services:
             HOSTNAME: F_
             VERBOSE_TABLE: "false"
         networks:
-            local_network_1:
+            universal-net:
 
     G_:
         build:
@@ -139,8 +193,29 @@ services:
             HOSTNAME: G_
             VERBOSE_TABLE: "true"
         networks:
-            local_network_1:
+            universal-net:
 
 networks:
-    local_network_1:
+    universal-net:
+      external: false
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.16.1.0/24
+            gateway: 172.16.1.1
+
+    local-net-A:
         external: false
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.16.2.0/24
+                  gateway: 172.16.2.1
+
+    local-net-B:
+        external: false
+        ipam: 
+            driver: default
+            config:
+                - subnet: 172.16.3.0/24
+                  gateway: 172.16.3.1
