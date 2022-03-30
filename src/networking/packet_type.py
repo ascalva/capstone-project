@@ -21,6 +21,9 @@ class PacketType(str, enum.Enum) :
     DBH_ADVERT                = enum.auto()
     DBH_NOT_DEAD              = enum.auto()
 
+    DBH_HOST_UPDATE           = enum.auto()
+    DBH_EDGE_UPDATE           = enum.auto()
+
 
     ########################## Error Messages #########################
 

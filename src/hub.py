@@ -24,7 +24,7 @@ class DBNode :
         self.host    = hostname
         self.verbose = verbose
         self.graph   = Graph(self.host)
-        self.table   = ServiceTable(self.graph.getNeighbors())
+        self.table   = ServiceTable(self.graph.getNeighbors(), self.host)
         self.queue   = queue.Queue()
         self.sport   = 8000
         self.dport   = 8001
@@ -50,6 +50,8 @@ class DBNode :
             "broker" : self.host + "broker",
             "type"   : PacketType.IOT_RESPONSE
         }).encode("utf-8")
+        print(f"Received message from {iot_hostname}")
+        print(" . |-> Message has been queued! ")
 
         self.queue.put(
             self.QueueMessage(message=msg, send_to=iot_hostname)
@@ -176,10 +178,12 @@ class DBNode :
 
         ######## TEST CODE ########
         if self.host == "A_" :
-            self.table._ServiceTable__addHost(self.host, self.host, ["temperature", "pressure"])
+            # self.table._ServiceTable__addHost(self.host, self.host, ["pressure"])
+            pass
         
         elif self.host == "B_" :
-            self.table._ServiceTable__addHost(self.host, self.host, ["baby_monitor"])
+            # self.table._ServiceTable__addHost(self.host, self.host, ["baby_monitor"])
+            pass
 
         self.runAdverts()
 

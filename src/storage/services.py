@@ -4,12 +4,18 @@ from .host_services import HostService
 from util           import RWLock
 
 class ServiceTable :
-    def __init__(self, neighbors) :
+    def __init__(self, neighbors, host) :
         self.lock      = threading.Lock()
         self.table     = {}
 
         # Keep list of neighbors for book keeping who is left to update.
         self.neighbors = neighbors
+
+        # Initialize row for current host and unset dirty flag, no need to 
+        # advertize empty list of services.
+        self.__addHost(host, host, [])
+        for n in self.neighbors :
+            self.table[host].done(n)
 
 
     def __str__(self) -> str:
