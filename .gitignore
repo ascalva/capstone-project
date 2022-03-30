@@ -3,3 +3,9 @@ env
 
 # Cache files
 **/__pycache__
+
+# Image files
+**/*.png
+**/*.PNG
+**/*.jpg
+**/*.jpeg
