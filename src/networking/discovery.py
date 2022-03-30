@@ -5,8 +5,10 @@ import time
 class Discovery:
 
     def __init__(self) -> None:
+        self.neighbors = []
+
         self.getSubnet()
-        self.routingTable = None
+        self.getNeighbors()
 
 
     def __shellCommand(self, command: str) -> str :
@@ -27,7 +29,7 @@ class Discovery:
             gateway = ".".join(ip_addr.split(".")[:3] + ["1"])
 
             # Local broker always configured to have last byte equal "2".
-            broker  = ".".join(ip_addr.split(".")[:3] + ["2"])
+            # broker  = ".".join(ip_addr.split(".")[:3] + ["2"])
 
             # Will raise ValueError exception if not actual address.
             _       = ipaddress.ip_address(ip_addr)
@@ -39,25 +41,27 @@ class Discovery:
         self.subnet  = subnet
         self.ip_addr = ip_addr
         self.gateway = gateway
-        self.broker  = broker
+        # self.broker  = broker
 
         print(f"subnet:  {self.subnet}")
         print(f"ip_addr: {self.ip_addr}")
         print(f"gateway: {self.gateway}")
     
 
-    def getNeighbors(self) -> None :
+    def getNeighbors(self)  :
+        
+        def parse(line) :
+            return line[line.find("(") + 1 : line.find(")")]
 
         # Exclude gateway IP and current device's IP from scan.
         # Exclude IPs of current device, gateway, and local broker.
-        exclude_ips = ",".join([self.gateway, self.broker, self.ip_addr])
-        command     = f"nmap -sn {self.subnet} --exclude {exclude_ips} | grep 'Nmap scan report'"
-        ret         = self.__shellCommand(command)
+        exclude_ips    = ",".join([self.gateway, self.ip_addr])
+        command        = f"nmap -sn {self.subnet} --exclude {exclude_ips} | grep 'Nmap scan report'"
+        ret            = self.__shellCommand(command)
 
-        print(ret)
+        # Parse and store neighbors.
+        self.neighbors = list(map(parse, ret.split("\n")))
 
-        # TODO: Parse IP's and update routing table.
-    
 
     def run(self) -> None :
         while True :
@@ -67,5 +71,4 @@ class Discovery:
 
 if __name__ == "__main__" :
     net = Discovery()
-    # net.getNeighbors()
     net.run()
