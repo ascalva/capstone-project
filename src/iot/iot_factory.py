@@ -1,6 +1,4 @@
-from .iot_sensor   import Sensor
-from .iot_service  import Service
-from .iot_consumer import Consumer
+from .types import Service, Sensor, Consumer
 
 class IOT_Factory :
     def __init__(self) :
