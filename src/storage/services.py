@@ -1,7 +1,7 @@
 import threading
 
 from .host_services import HostService
-from util           import RWLock
+from common         import RWLock
 
 class ServiceTable :
     def __init__(self, neighbors, host) :
