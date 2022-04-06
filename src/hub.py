@@ -4,18 +4,15 @@ import time
 import json
 import os
 import queue
+import uuid
 
 from dataclasses import dataclass
-from networking  import Graph, PacketType
+from networking  import Graph
+from common      import PacketType, QueueMessage
 from storage     import ServiceTable
 
 
 class DBNode :
-
-    @dataclass
-    class QueueMessage :
-        message : bytes
-        send_to : str
 
     def __init__(self, hostname, verbose=False) -> None:
         # TODO: Need to routinely check for updates to topology.
@@ -45,17 +42,37 @@ class DBNode :
         self.table.addServiceToHost(self.host, service_name)
 
         # Create response message and add to queue.
+        trans_id = uuid.uuid4()
         msg = json.dumps({
-            "sender" : self.host,
-            "broker" : self.host + "broker",
-            "type"   : PacketType.IOT_RESPONSE
+            "sender"   : self.host,
+            "broker"   : self.host + "broker",
+            "type"     : PacketType.IOT_RESPONSE,
+            "trans_id" : trans_id.hex
         }).encode("utf-8")
         print(f"Received message from {iot_hostname}")
         print(" . |-> Message has been queued! ")
 
         self.queue.put(
-            self.QueueMessage(message=msg, send_to=iot_hostname)
+            QueueMessage(message=msg, send_to=iot_hostname, trans_id=trans_id)
         )
+    
+    def iotProcessReqToSub(self, data) :
+        iot_hostname = data["sender"]
+
+        services = {"host" : ["service_1"]}
+        trans_id = uuid.uuid4()
+        msg = json.dumps({
+            "sender"   : self.host,
+            "broker"   : self.host + "broker",
+            "type"     : PacketType.IOT_RESPONSE,
+            "trans_id" : trans_id.hex,
+            "services" : services
+        }).encode("utf-8")
+
+        self.queue.put(
+            QueueMessage(message=msg, send_to=iot_hostname, trans_id=trans_id)
+        )
+
     
     def dbhProcessStillAlive(self, data) :
         sender = data["sender"]
@@ -65,7 +82,7 @@ class DBNode :
     def processPacket(self, packet) : 
         getProcessor = {
             PacketType.IOT_REQUEST_TO_PUBLISH   : lambda data : self.iotProcessReqToAdd(data),
-            PacketType.IOT_REQUEST_TO_SUBSCRIBE : lambda _ : _,
+            PacketType.IOT_REQUEST_TO_SUBSCRIBE : lambda data : self.iotProcessReqToSub(data),
             PacketType.IOT_RESPONSE             : lambda _ : _,
             PacketType.IOT_END                  : lambda _ : _,
             PacketType.DBH_NOT_DEAD             : lambda data : self.dbhProcessStillAlive(data),
@@ -91,13 +108,15 @@ class DBNode :
             for neighbor in self.graph.getNeighbors() :
 
                 # Create still_alive message for every neighbor and add to queue.
+                trans_id = uuid.uuid4()
                 msg = json.dumps({
                     "sender" : self.host,
-                    "type"   : PacketType.DBH_NOT_DEAD
+                    "type"   : PacketType.DBH_NOT_DEAD,
+                    "trans_id" : trans_id.hex
                 }).encode("utf-8")
 
                 self.queue.put(
-                    self.QueueMessage(message=msg, send_to=neighbor)
+                    QueueMessage(message=msg, send_to=neighbor, trans_id=trans_id)
                 )
 
 
@@ -124,7 +143,8 @@ class DBNode :
             "type"     : PacketType.DBH_ADVERT,
             "services" : services,
             "sender"   : self.host,
-            "message"  : f"hello from {self.host}"
+            "message"  : f"hello from {self.host}",
+            "trans_id" : uuid.uuid4().hex
         }
 
         # Don't send ads if no updates avaiable for neighbor, send still alive message instead.
@@ -164,7 +184,12 @@ class DBNode :
                 send_to = data.send_to
                 message = data.message
 
-                self.sock_send.sendto(message, (send_to, self.sport))
+                try :
+                    self.sock_send.sendto(message, (send_to, self.sport))
+                
+                except socket.error as e :
+                    print(f"Error sending message from queue: {data}")
+
                 self.queue.task_done()
     
 
