@@ -2,6 +2,12 @@ version: "3.8"
 
 services:
 
+    # dummy:
+    #     build:
+    #         context: .
+    #         dockerfile: ./Dockerfiles/client.Dockerfile
+    #     image: base_node
+
     ############################# A Services ###################################
     A_broker:
         image: eclipse-mosquitto:latest
@@ -18,12 +24,12 @@ services:
             universal-net:
     
     A_iot_1:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
+        # build:
+        #     context: .
+        #     dockerfile: ./Dockerfiles/client.Dockerfile
         command: python3 src/iot_service.py
         container_name: A_iot_1
-        image: iot_client
+        image: base_node
         volumes:
             - ./:/app
         tty: true
@@ -34,12 +40,12 @@ services:
             local-net-A:
 
     A_iot_2:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
+        # build:
+        #     context: .
+        #     dockerfile: ./Dockerfiles/client.Dockerfile
         command: python3 src/iot_service.py
         container_name: A_iot_2
-        image: iot_client
+        image: base_node
         volumes:
             - ./:/app
         tty: true
@@ -50,11 +56,11 @@ services:
             local-net-A:
     
     A_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
+        # build:
+        #     context: .
+        #     dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: A_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
@@ -69,11 +75,11 @@ services:
 
     ############################# B Services ###################################
     B_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
+        # build:
+        #     context: .
+        #     dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: B_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
