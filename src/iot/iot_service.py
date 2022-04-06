@@ -1,4 +1,4 @@
-from typing   import Dict, Optional
+from typing    import Dict, Optional
 from .iot_base import IOT_Base
 
 class Service(IOT_Base) :
@@ -7,5 +7,6 @@ class Service(IOT_Base) :
 
         # TODO: Create thread for listening.
     
+
     def executeService(self) :
         pass
