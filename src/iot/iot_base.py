@@ -4,10 +4,10 @@ import time
 import socket
 import paho.mqtt.client as mqtt
 
-from random               import randrange, uniform
-from typing               import Iterator, Dict, Optional
-from networking.discovery import Discovery
-from networking           import PacketType, ServiceType
+from random     import randrange, uniform
+from typing     import Iterator, Dict, Optional
+from networking import Discovery
+from common     import PacketType, ServiceType
 
 
 class IOT_Base :

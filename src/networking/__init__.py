@@ -1,2 +1,2 @@
-from .graph       import Graph
-from .packet_type import PacketType
+from .graph     import Graph
+from .discovery import Discovery
