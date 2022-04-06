@@ -42,7 +42,10 @@ class IOT_Base :
             print(f"Failed to find broker, quitting now!")
 
 
-    def identifyBroker(self) :
+    # TODO: Service type and packet type should be parameters.
+    #       Need to make function more flexible, or pass in
+    #       message as a whole to funtion.
+    def identifyBroker(self, msg = None) :
         found_broker = False
 
         msg = json.dumps({
