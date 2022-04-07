@@ -5,10 +5,10 @@ class PacketType(str, enum.Enum) :
     ################## IOT-Related Message Types ######################
 
     # Request made by IOT to get remote broker hostname and subscribe to service.
-    IOT_REQUEST_TO_SUBSCRIBE  = enum.auto()
+    # IOT_REQUEST_TO_SUBSCRIBE  = enum.auto()
 
     # Request made by IOT to get broker hostname and start publishing.
-    IOT_REQUEST_TO_PUBLISH    = enum.auto()
+    IOT_REQUEST               = enum.auto()
 
     # Lead node/hub response with broker hostname.
     IOT_RESPONSE              = enum.auto()

@@ -1,8 +1,9 @@
 import enum
 
 class ServiceType(str, enum.Enum) :
-    SENSOR     = enum.auto()
-    BY_REQUEST = enum.auto()
+    SENSOR   = enum.auto()
+    SERVICE  = enum.auto()
+    CONSUMER = enum.auto()
 
 
 class ServiceResponse(str, enum.Enum) :
