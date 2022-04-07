@@ -6,10 +6,9 @@ import os
 import queue
 import uuid
 
-from dataclasses import dataclass
 from networking  import Graph
 from common      import PacketType, QueueMessage
-from storage     import ServiceTable
+from storage     import ServiceTable, IOTHandler
 
 
 class DBNode :
@@ -20,13 +19,15 @@ class DBNode :
 
         self.host    = hostname
         self.verbose = verbose
+        self.queue   = queue.Queue()
         self.graph   = Graph(self.host)
         self.table   = ServiceTable(self.graph.getNeighbors(), self.host)
-        self.queue   = queue.Queue()
+        self.iot_db  = IOTHandler(self.host, self.queue)
+
+        # Setup sockets for communication.
         self.sport   = 8000
         self.dport   = 8001
 
-        # TODO: Switch to using TCP sockets instead of UDP sockets.
         self.sock_recv = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_recv.bind(("", self.sport))
 
@@ -34,44 +35,12 @@ class DBNode :
         self.sock_send.bind(("", self.dport))
 
         
-    def iotProcessReqToAdd(self, data) :
+    def iotProcessReq(self, data) :
         service_name = data["topic"]
-        iot_hostname = data["sender"]
         
         # Add to current host's services, will be broadcasted to neighbors.
         self.table.addServiceToHost(self.host, service_name)
-
-        # Create response message and add to queue.
-        trans_id = uuid.uuid4()
-        msg = json.dumps({
-            "sender"   : self.host,
-            "broker"   : self.host + "broker",
-            "type"     : PacketType.IOT_RESPONSE,
-            "trans_id" : trans_id.hex
-        }).encode("utf-8")
-        print(f"Received message from {iot_hostname}")
-        print(" . |-> Message has been queued! ")
-
-        self.queue.put(
-            QueueMessage(message=msg, send_to=iot_hostname, trans_id=trans_id)
-        )
-    
-    def iotProcessReqToSub(self, data) :
-        iot_hostname = data["sender"]
-
-        services = {"host" : ["service_1"]}
-        trans_id = uuid.uuid4()
-        msg = json.dumps({
-            "sender"   : self.host,
-            "broker"   : self.host + "broker",
-            "type"     : PacketType.IOT_RESPONSE,
-            "trans_id" : trans_id.hex,
-            "services" : services
-        }).encode("utf-8")
-
-        self.queue.put(
-            QueueMessage(message=msg, send_to=iot_hostname, trans_id=trans_id)
-        )
+        self.iot_db.handleRequest(data)
 
     
     def dbhProcessStillAlive(self, data) :
@@ -81,12 +50,9 @@ class DBNode :
 
     def processPacket(self, packet) : 
         getProcessor = {
-            PacketType.IOT_REQUEST_TO_PUBLISH   : lambda data : self.iotProcessReqToAdd(data),
-            PacketType.IOT_REQUEST_TO_SUBSCRIBE : lambda data : self.iotProcessReqToSub(data),
-            PacketType.IOT_RESPONSE             : lambda _ : _,
-            PacketType.IOT_END                  : lambda _ : _,
-            PacketType.DBH_NOT_DEAD             : lambda data : self.dbhProcessStillAlive(data),
-            PacketType.DBH_ADVERT               : lambda data : self.table.readPacket(data)
+            PacketType.IOT_REQUEST   : lambda data : self.iotProcessReq(data),
+            PacketType.DBH_NOT_DEAD  : lambda data : self.dbhProcessStillAlive(data),
+            PacketType.DBH_ADVERT    : lambda data : self.table.readPacket(data)
         }
 
         data = json.loads(packet.decode("utf-8"))
@@ -155,7 +121,8 @@ class DBNode :
 
 
     def runAdverts(self) :
-        # TODO: If we fail to send to a node, might need to be removed from neighbors/graph/everything.
+        # TODO: If we fail to send to a node, might need to be removed 
+        # from neighbors/graph/everything.
         while True :
             time.sleep(5)
             if self.verbose : print(self.table)
