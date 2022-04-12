@@ -7,7 +7,7 @@ import queue
 import uuid
 
 from networking  import Graph
-from common      import PacketType, QueueMessage
+from common      import PacketType, QueueMessage, ServiceType, ConsumerType
 from storage     import ServiceTable, IOTHandler
 
 
@@ -23,6 +23,10 @@ class DBNode :
         self.graph   = Graph(self.host)
         self.table   = ServiceTable(self.graph.getNeighbors(), self.host)
         self.iot_db  = IOTHandler(self.host, self.queue)
+        
+        # Not ideal, but pass in function to get most up-to-date list of services.
+        # This is used when handling consumer requests.
+        self.iot_db.setServiceFuncPtr(self.table.createPacketAll)
 
         # Setup sockets for communication.
         self.sport   = 8000
@@ -36,12 +40,14 @@ class DBNode :
 
         
     def iotProcessReq(self, data) :
-        service_name = data["topic"]
-        
-        # Add to current host's services, will be broadcasted to neighbors.
-        self.table.addServiceToHost(self.host, service_name)
-        self.iot_db.handleRequest(data)
 
+        # If IOT device is service or sensor, add to current host's 
+        # services (will be broadcasted to neighbors).
+        if data["service_type"] != ServiceType.CONSUMER :
+            self.table.addServiceToHost(self.host, data["topic"])
+
+        self.iot_db.handleRequest(data)
+        
     
     def dbhProcessStillAlive(self, data) :
         sender = data["sender"]
@@ -124,7 +130,7 @@ class DBNode :
         # TODO: If we fail to send to a node, might need to be removed 
         # from neighbors/graph/everything.
         while True :
-            time.sleep(5)
+            time.sleep(2)
             if self.verbose : print(self.table)
 
             for neighbor in self.graph.getNeighbors() :
