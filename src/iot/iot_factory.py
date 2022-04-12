@@ -10,4 +10,4 @@ class IOT_Factory :
         }
     
     def __getitem__(self, type) :
-        return self.__select.get(type, self.__default)
+        return self.__select.get(type.lower(), self.__default)

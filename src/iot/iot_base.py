@@ -23,7 +23,7 @@ class IOT_Base(ABC) :
         # Create socket for sending data and make it time out after 3 seconds.
         self.sock        = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(("", 8000))
-        self.sock.settimeout(3)  
+        self.sock.settimeout(5)  
 
 
     def identifyBroker(self, msg_ = None) :
