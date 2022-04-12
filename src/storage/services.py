@@ -38,6 +38,10 @@ class ServiceTable :
     def dropHost(self, host) :
         del self.table[host]
 
+    
+    def createPacketAll(self) :
+        return {k : v.createPacket() for k, v in self.table.items()}
+
 
     def createPacket(self, send_to=None) :
         # TODO: If dirty, don't send to node that made it dirty (sender of last update).
