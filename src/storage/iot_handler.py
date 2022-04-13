@@ -3,7 +3,7 @@ import queue
 import uuid
 import json
 
-from common import ServiceType, QueueMessage, PacketType, ServiceStatus, ConsumerType
+from common import ServiceType, QueueMessage, PacketType, ServiceStatus, ConsumerAction
 
 
 class IOTHandler :
@@ -28,7 +28,7 @@ class IOTHandler :
         service_type = data["service_type"]
 
         # If request is from remote consumer, don't add device, only add to service queue.
-        if ("consumer_type" in data) and (data["consumer_type"] == ConsumerType.REQUEST) :
+        if ("consumer_type" in data) and (data["consumer_type"] == ConsumerAction.REQUEST) :
             self.requestToAccess(data)
             return
         
