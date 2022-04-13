@@ -1,4 +1,4 @@
-from common     import PacketType, ServiceType, ConsumerType
+from common     import PacketType, ServiceType, ConsumerAction
 from ..iot_base import IOT_Base
 
 class Consumer(IOT_Base) :
@@ -19,14 +19,19 @@ class Consumer(IOT_Base) :
         msg = {
             "type"          : PacketType.IOT_REQUEST,
             "service_type"  : ServiceType.CONSUMER,
-            "consumer_type" : ConsumerType.JOIN,
+            "consumer_type" : ConsumerAction.JOIN,
             "sender"        : self.hostname
         }
 
-        data = self.identifyBroker(msg)
-
+        data = self.identifyBroker(msg, connect=False)
         print(data)
 
+
+    def subscribeToSensor(self) :
+        pass
+
+    def subscribeToService(self) :
+        pass
 
     def start(self) :
         pass

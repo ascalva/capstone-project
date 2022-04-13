@@ -4,7 +4,7 @@ import socket
 import paho.mqtt.client as mqtt
 
 from networking import Discovery
-from common     import PacketType, ServiceType
+from common     import PacketType
 from abc        import ABC, abstractmethod
 
 
@@ -26,7 +26,7 @@ class IOT_Base(ABC) :
         self.sock.settimeout(5)  
 
 
-    def identifyBroker(self, msg_ = None) :
+    def identifyBroker(self, msg_ = None, connect = True) :
         msg  = json.dumps(msg_).encode("utf-8")
         data = None
 
@@ -41,7 +41,7 @@ class IOT_Base(ABC) :
                 if "type" in data and data["type"] == PacketType.IOT_RESPONSE :
                     self.ad_node     = data["sender"]
                     self.broker_node = data["broker"]
-                    self.connectToBroker()
+                    if connect : self.connectToBroker()
                     break
             
             except socket.timeout as e :

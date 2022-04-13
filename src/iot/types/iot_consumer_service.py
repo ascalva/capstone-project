@@ -1,0 +1,2 @@
+class ConsumerService :
+    pass
