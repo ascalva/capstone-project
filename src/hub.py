@@ -7,7 +7,7 @@ import queue
 import uuid
 
 from networking  import Graph
-from common      import PacketType, QueueMessage, ServiceType, ConsumerType
+from common      import PacketType, QueueMessage, ServiceType, ConsumerAction
 from storage     import ServiceTable, IOTHandler
 
 
