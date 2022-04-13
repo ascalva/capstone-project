@@ -5,17 +5,9 @@ class ServiceType(str, enum.Enum) :
     SERVICE  = enum.auto()
     CONSUMER = enum.auto()
 
-
-# class ServiceResponse(str, enum.Enum) :
-    
-#     # Sent for services acting as sensors, anyone can read.
-#     BROKER_INVITE = enum.auto()
-
-#     # Sent for services with critical section, must wait for turn.
-#     WAIT          = enum.auto()
-
-#     # Answer has arrived.
-#     OUTPUT        = enum.auto()
+    # TODO: Need to add hybrids:
+    #         - Consumer-Sensor
+    #         - Consumer-Service
 
 
 class ServiceStatus(str, enum.Enum) :
@@ -24,7 +16,7 @@ class ServiceStatus(str, enum.Enum) :
     READY = enum.auto()
     BUSY  = enum.auto()
 
-class ConsumerType(str, enum.Enum) :
+class ConsumerAction(str, enum.Enum) :
     JOIN    = enum.auto()
     LIST    = enum.auto()
     REQUEST = enum.auto()
