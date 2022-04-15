@@ -4,7 +4,7 @@ import socket
 import paho.mqtt.client as mqtt
 
 from networking import Discovery
-from common     import PacketType
+from common     import PacketType, S
 from abc        import ABC, abstractmethod
 
 
@@ -21,8 +21,9 @@ class IOT_Base(ABC) :
         self.hostname    = os.environ.get("HOSTNAME", self.network.ip_addr)
 
         # Create socket for sending data and make it time out after 3 seconds.
+        self.sport       = 8000
         self.sock        = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(("", 8000))
+        self.sock.bind(("", self.sport))
         self.sock.settimeout(5)  
 
 
@@ -32,7 +33,7 @@ class IOT_Base(ABC) :
 
         for n in self.network.neighbors :
             try :
-                self.sock.sendto(msg, (n, 8000))
+                self.sock.sendto(msg, (n, self.sport))
 
                 # TODO: Might need a loop, in case iot device gets message from other iot.
                 packet = self.sock.recv(1024)
@@ -60,15 +61,23 @@ class IOT_Base(ABC) :
         return data
         
 
-    def connectToBroker(self) -> None : 
+    def connectToBroker(self, broker_name=None) -> None : 
         try :
             self.client = mqtt.Client(self.topic)
-            self.client.connect(self.broker_node)
+            self.client.connect(broker_name or self.broker_node)
             self.connected = True
         
         except Exception as err :
             print(err)
+    
 
+    @staticmethod
+    def invertDictOfLists(d) : 
+        d_ = {}
+        for k, v in d.items() :
+            d_.update({v_elt : k for v_elt in v})
+        return d_
+    
 
     @abstractmethod
     def initBrokerConnection(self) :
