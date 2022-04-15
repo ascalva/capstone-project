@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 import socket
 import threading
 import time
@@ -155,39 +156,35 @@ class DBNode :
                 finally :
                     self.table.lock.release()
             
-            # Send messages from queue.
-            while not self.queue.empty() :
-                data    = self.queue.get()
-                send_to = data.send_to
-                message = data.message
 
-                try :
-                    self.sock_send.sendto(message, (send_to, self.sport))
-                
-                except socket.error as e :
-                    print(f"Error sending message from queue: {data}")
+    def sendQueueMessages(self) :
+        while True :
+            data    = self.queue.get()
+            send_to = data.send_to
+            message = data.message
 
-                self.queue.task_done()
-    
+            try :
+                self.sock_send.sendto(message, (send_to, self.sport))
+
+            except socket.error as e :
+                print(f"Error sending message from queue: {data}")
+
+            self.queue.task_done()
+
 
     def run(self) :
         
-        # Create thread for listening and thread of sending still_alive messages.
+        # Create threads for listening, sending service ads, and sending still alive messages.
         thread_listen      = threading.Thread(target=self.listen,         daemon=True)
         thread_still_alive = threading.Thread(target=self.sendStillAlive, daemon=True)
+        thread_send_ads    = threading.Thread(target=self.runAdverts,     daemon=True)
+
         thread_listen.start()
         thread_still_alive.start()
+        thread_send_ads.start()
 
-        ######## TEST CODE ########
-        if self.host == "A_" :
-            # self.table._ServiceTable__addHost(self.host, self.host, ["pressure"])
-            pass
-        
-        elif self.host == "B_" :
-            # self.table._ServiceTable__addHost(self.host, self.host, ["baby_monitor"])
-            pass
-
-        self.runAdverts()
+        # Start reading queue and sending messages.
+        self.sendQueueMessages()
 
 
 if __name__ == "__main__" :
