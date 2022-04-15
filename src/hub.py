@@ -7,7 +7,7 @@ import queue
 import uuid
 
 from networking  import Graph
-from common      import PacketType, QueueMessage, ServiceType, ConsumerAction
+from common      import PacketType, QueueMessage, ServiceType, ConsumerAction, S
 from storage     import ServiceTable, IOTHandler
 
 
@@ -29,8 +29,8 @@ class DBNode :
         self.iot_db.setServiceFuncPtr(self.table.createPacketAll)
 
         # Setup sockets for communication.
-        self.sport   = 8000
-        self.dport   = 8001
+        self.sport   = S.SOURCE_PORT
+        self.dport   = S.DESTINATION_PORT
 
         self.sock_recv = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_recv.bind(("", self.sport))
@@ -48,6 +48,10 @@ class DBNode :
 
         self.iot_db.handleRequest(data)
         
+
+    def iotProcessRes(self, data) :
+        self.iot_db.notifyOfResponse(data)
+
     
     def dbhProcessStillAlive(self, data) :
         sender = data["sender"]
@@ -57,11 +61,12 @@ class DBNode :
     def processPacket(self, packet) : 
         getProcessor = {
             PacketType.IOT_REQUEST   : lambda data : self.iotProcessReq(data),
+            PacketType.IOT_RESPONSE  : lambda data : self.iotProcessRes(data),
             PacketType.DBH_NOT_DEAD  : lambda data : self.dbhProcessStillAlive(data),
             PacketType.DBH_ADVERT    : lambda data : self.table.readPacket(data)
         }
 
-        data = json.loads(packet.decode("utf-8"))
+        data = json.loads(packet.decode(S.ENCODING))
         if self.verbose :
             print(f"Recieved from {data['sender']} the packet:")
             print(f"\t|-> Message type : {PacketType(data['type'])}")
@@ -85,7 +90,7 @@ class DBNode :
                     "sender" : self.host,
                     "type"   : PacketType.DBH_NOT_DEAD,
                     "trans_id" : trans_id.hex
-                }).encode("utf-8")
+                }).encode(S.ENCODING)
 
                 self.queue.put(
                     QueueMessage(message=msg, send_to=neighbor, trans_id=trans_id)
@@ -93,11 +98,10 @@ class DBNode :
 
 
     def listen(self) :
-        size = 1024
 
         while True :
             try :
-                data = self.sock_recv.recv(size)
+                data = self.sock_recv.recv(S.PACKET_SIZE)
                 self.processPacket(data)
 
             except socket.error as error :
@@ -123,7 +127,7 @@ class DBNode :
         if not updateExists :
             message["type"] = PacketType.DBH_NOT_DEAD
 
-        return bytes(json.dumps(message), "utf-8")
+        return bytes(json.dumps(message), S.ENCODING)
 
 
     def runAdverts(self) :
