@@ -15,6 +15,7 @@ class ServiceStatus(str, enum.Enum) :
     # Sent by IOT device when it's ready for new client.
     READY = enum.auto()
     BUSY  = enum.auto()
+    DONE  = enum.auto()
 
 
 class ConsumerAction(str, enum.Enum) :
