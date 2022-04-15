@@ -1,3 +1,6 @@
+# TODO: Need to add semantic information to each service.
+# Might need the us of __dict__ to make service serializeable.
+
 class HostService :
     def __init__(self, host, source, services=None, neighbors=None) :
         self.host     = host
