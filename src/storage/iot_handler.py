@@ -3,7 +3,7 @@ import queue
 import uuid
 import json
 
-from common import ServiceType, QueueMessage, PacketType, ServiceStatus, ConsumerAction
+from common import ServiceType, QueueMessage, PacketType, ServiceStatus, ConsumerAction, S
 
 
 class IOTHandler :
@@ -97,6 +97,14 @@ class IOTHandler :
             or (host in self.__devices_by_service)
 
 
+    def notifyOfResponse(self, data) :
+        res_id = data["trans_id"]
+
+        # Find device interface that is currently executing same transaction.
+        for device in self.__devices_by_service.values() :
+            if device[res_id] :
+                device.return_msg.put(data)
+
 
 class IOTDeviceInterface :
     def __init__(self, data, localhost, queue_ptr, res_w_services=None) -> None:
@@ -116,12 +124,17 @@ class IOTDeviceInterface :
         # TODO: Don't need thread if service is of sensor type.
         if self.s_type == ServiceType.SERVICE :
             self.wait_queue = queue.Queue()
+            self.return_msg = queue.Queue(maxsize=1)
+            self.trans_id   = None
             t = threading.Thread(target=self.checkOnQueue, daemon=True)
             # t.start()
 
+    def __getitem__(self, trans_id) :
+        return self.trans_id == trans_id
 
-    def requestToConnect(self, requestee, params = None) :
-        trans_id = uuid.uuid4()
+    def requestToConnect(self, data) :
+        requestee = data["sender"]
+        trans_id  = uuid.uuid4()
         msg = {
             "sender"   : self.localhost,
             "type"     : PacketType.IOT_RESPONSE,
@@ -133,7 +146,7 @@ class IOTDeviceInterface :
             msg["status"] = ServiceStatus.BUSY
 
             self.wait_queue.put(
-                (requestee, params)
+                (requestee, data)
             )
 
         else :
@@ -150,8 +163,43 @@ class IOTDeviceInterface :
 
     def checkOnQueue(self) :
         while True :
-            # TODO: Check with iot device that it's ready
-            requestee, params = self.msg_queue.get()
+            
+            # Get the next request for service.
+            requestee, params = self.wait_queue.get()
+            self.trans_id = uuid.uuid4()
+
+            # Create and queue message for IoT device.
+            msg = json.dumps({
+                "sender"   : self.localhost,
+                "type"     : PacketType.IOT_REQUEST,
+                "trans_id" : self.trans_id.hex,
+                "params"   : params
+            }).encode(S.ENCODING)
+
+            self.msg_queue.put(
+                QueueMessage(message=msg, send_to=self.iot_host, trans_id=self.trans_id)
+            )
+
+            # Wait/Block until we get response from IoT device.
+            iot_res = self.return_msg.get()
+
+            # TODO: Need to verify that trans_id == res_id
+            res_id = iot_res["trans_id"]
+            output = iot_res["output"]
+            print(f"!!! Transaction IDs match: {self.trans_id == res_id}")
+
+            msg = json.dumps({
+                "sender" : self.localhost,
+                "type"   : PacketType.IOT_RESPONSE,
+                "output" : output
+            }).encode(S.ENCODING)
+
+            self.msg_queue.put(
+                QueueMessage(message=msg, send_to=requestee, trans_id=self.trans_id)
+            )
+
+            self.wait_queue.task_done()
+            self.return_msg.task_done()
     
 
     # TODO: Move into thread as first thing to do.
