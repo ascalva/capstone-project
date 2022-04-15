@@ -12,6 +12,15 @@ class Service(IOT_Base, ServiceBase) :
     def __init__(self, topic: str, data_file: Optional[str] = None):
         super().__init__(topic)
 
+        self.initBrokerConnection()
+
+        if self.ad_node is not None :
+            self.start()
+        
+        else :
+            print(f"Failed to find broker, quitting now!")
+
+
     def initBrokerConnection(self) :
         msg = {
             "type"         : PacketType.IOT_REQUEST, 
@@ -39,6 +48,7 @@ class Service(IOT_Base, ServiceBase) :
                 trans_id = data["trans_id"]
                 params   = data["params"]
 
+                print("## Got request ##")
                 msg = json.dumps({
                     "type"         : PacketType.IOT_RESPONSE,
                     "service_type" : ServiceType.SERVICE,
@@ -48,6 +58,7 @@ class Service(IOT_Base, ServiceBase) :
                 }).encode(S.ENCODING)
 
                 self.sock.sendto(msg, (sender, self.sport))
+                print("## Sent back response ##")
             
             # Socket does have a timeout, ignore timeout and try again.
             except socket.timeout as e :

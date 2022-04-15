@@ -20,7 +20,9 @@ class Consumer(IOT_Base) :
         # Create data stream (will be sent to broker).
         if self.ad_node is not None :
             # For testing
-            s_type = ServiceType.SENSOR
+            s_type = ServiceType.SERVICE
+
+            self.sock.settimeout(None)
             self.start(s_type)
 
         else :
@@ -75,7 +77,7 @@ class Consumer(IOT_Base) :
 
 
     def subscribeToService(self) :
-        topic_to_sub = ""
+        topic_to_sub = "average"
         topic_host   = self.get_host_from_service[topic_to_sub]
 
         msg = json.dumps({
@@ -83,7 +85,8 @@ class Consumer(IOT_Base) :
             "service_type"  : ServiceType.CONSUMER,
             "consumer_type" : ConsumerAction.REQUEST,
             "sender"        : self.hostname,
-            "topic"         : topic_to_sub
+            "topic"         : topic_to_sub,
+            "values"        : [1,2,3,4] # Test
         }).encode(S.ENCODING)
 
         self.sock.sendto(msg, (topic_host, 8000))
@@ -92,6 +95,7 @@ class Consumer(IOT_Base) :
         while True :
             packet = self.sock.recv(S.PACKET_SIZE)
             data   = json.loads(packet.decode(S.ENCODING))
+            print(f"Received packet: {data}")
 
             if data["status"] == ServiceStatus.BUSY :
                 continue
