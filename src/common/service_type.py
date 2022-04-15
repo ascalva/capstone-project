@@ -16,8 +16,18 @@ class ServiceStatus(str, enum.Enum) :
     READY = enum.auto()
     BUSY  = enum.auto()
 
+
 class ConsumerAction(str, enum.Enum) :
+    
+    # Request to communicate with local broker/ad node.
     JOIN    = enum.auto()
+
+    # Request list of available services.
     LIST    = enum.auto()
+
+    # Check if service exists.
+    EXISTS  = enum.auto()
+
+    # Used for requesting service/sensor data from remote ad nodes.
     REQUEST = enum.auto()
     
