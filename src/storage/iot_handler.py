@@ -111,6 +111,7 @@ class IOTDeviceInterface :
         self.localhost = localhost
         self.s_type    = data["service_type"]
         self.iot_host  = data["sender"]
+        self.trans_id  = None
         # self.topic     = data["topic"]
 
         # Request queue and message queue (for outgoing messages).
@@ -125,11 +126,13 @@ class IOTDeviceInterface :
         if self.s_type == ServiceType.SERVICE :
             self.wait_queue = queue.Queue()
             self.return_msg = queue.Queue(maxsize=1)
-            self.trans_id   = None
             t = threading.Thread(target=self.checkOnQueue, daemon=True)
-            # t.start()
+            t.start()
 
     def __getitem__(self, trans_id) :
+        if not isinstance(trans_id, uuid.UUID) :
+            trans_id = uuid.UUID(trans_id)
+
         return self.trans_id == trans_id
 
     def requestToConnect(self, data) :
@@ -184,13 +187,14 @@ class IOTDeviceInterface :
             iot_res = self.return_msg.get()
 
             # TODO: Need to verify that trans_id == res_id
-            res_id = iot_res["trans_id"]
+            res_id = uuid.UUID(iot_res["trans_id"])
             output = iot_res["output"]
             print(f"!!! Transaction IDs match: {self.trans_id == res_id}")
 
             msg = json.dumps({
                 "sender" : self.localhost,
                 "type"   : PacketType.IOT_RESPONSE,
+                "status" : ServiceStatus.DONE,
                 "output" : output
             }).encode(S.ENCODING)
 
