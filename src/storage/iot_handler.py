@@ -50,7 +50,7 @@ class IOTHandler :
         if send_service_list :
             services = self.__get_services()
 
-        device = IOTDeviceInterface(data, self.localhost, self.__queue_ptr, res_w_services=services)
+        device = DeviceInterface(data, self.localhost, self.__queue_ptr, res_w_services=services)
 
         # If device is a consumer, only add reference by hostname.
         # Otherwise, also add reference by topic/service name.
@@ -98,15 +98,19 @@ class IOTHandler :
 
 
     def notifyOfResponse(self, data) :
+        if "trans_id" not in data :
+            return
+
         res_id = data["trans_id"]
 
-        # Find device interface that is currently executing same transaction.
+        found_match = False
         for device in self.__devices_by_service.values() :
-            if device[res_id] :
-                device.return_msg.put(data)
+            found_match |= device.checkTransactionID(res_id, data)
+        
+        print(f"!!! Transaction IDs match: {found_match}")
 
 
-class IOTDeviceInterface :
+class DeviceInterface :
     def __init__(self, data, localhost, queue_ptr, res_w_services=None) -> None:
         self.localhost = localhost
         self.s_type    = data["service_type"]
@@ -115,25 +119,28 @@ class IOTDeviceInterface :
         # self.topic     = data["topic"]
 
         # Request queue and message queue (for outgoing messages).
-        # self.wait_queue = queue.Queue()
         self.msg_queue  = queue_ptr
 
         # Queue response to IOT device.
         self.sendConfirmationMsg(w_services=res_w_services)
 
-        # TODO: Need to create thread that checks queue for waiting hosts.
-        # TODO: Don't need thread if service is of sensor type.
         if self.s_type == ServiceType.SERVICE :
-            self.wait_queue = queue.Queue()
-            self.return_msg = queue.Queue(maxsize=1)
+            self.__wait_queue = queue.Queue()
+            self.__return_msg = queue.Queue(maxsize=1)
             t = threading.Thread(target=self.checkOnQueue, daemon=True)
             t.start()
 
-    def __getitem__(self, trans_id) :
-        if not isinstance(trans_id, uuid.UUID) :
-            trans_id = uuid.UUID(trans_id)
+    
+    def checkTransactionID(self, res_id, data) :
+        if not isinstance(res_id, uuid.UUID) :
+            res_id = uuid.UUID(res_id)
+        
+        if self.trans_id == res_id :
+            self.__return_msg.put(data)
+            return True
+        
+        return False
 
-        return self.trans_id == trans_id
 
     def requestToConnect(self, data) :
         requestee = data["sender"]
@@ -148,7 +155,7 @@ class IOTDeviceInterface :
             msg["broker"] = self.localhost
             msg["status"] = ServiceStatus.BUSY
 
-            self.wait_queue.put(
+            self.__wait_queue.put(
                 (requestee, data)
             )
 
@@ -168,7 +175,7 @@ class IOTDeviceInterface :
         while True :
             
             # Get the next request for service.
-            requestee, params = self.wait_queue.get()
+            requestee, params = self.__wait_queue.get()
             self.trans_id = uuid.uuid4()
 
             # Create and queue message for IoT device.
@@ -184,13 +191,10 @@ class IOTDeviceInterface :
             )
 
             # Wait/Block until we get response from IoT device.
-            iot_res = self.return_msg.get()
+            iot_res = self.__return_msg.get()
+            output  = iot_res["output"]
 
-            # TODO: Need to verify that trans_id == res_id
-            res_id = uuid.UUID(iot_res["trans_id"])
-            output = iot_res["output"]
-            print(f"!!! Transaction IDs match: {self.trans_id == res_id}")
-
+            # Create response with output for device that made the request.
             msg = json.dumps({
                 "sender" : self.localhost,
                 "type"   : PacketType.IOT_RESPONSE,
@@ -202,11 +206,10 @@ class IOTDeviceInterface :
                 QueueMessage(message=msg, send_to=requestee, trans_id=self.trans_id)
             )
 
-            self.wait_queue.task_done()
-            self.return_msg.task_done()
+            self.__wait_queue.task_done()
+            self.__return_msg.task_done()
     
 
-    # TODO: Move into thread as first thing to do.
     def sendConfirmationMsg(self, w_services=None) :
         trans_id = uuid.uuid4()
         msg = json.dumps({

@@ -1,10 +1,10 @@
-# TODO: Need to add semantic information to each service.
-# Might need the us of __dict__ to make service serializeable.
+from common            import ServiceType
+from .service_metadata import ServiceMetadata
 
 class HostService :
     def __init__(self, host, source, services=None, neighbors=None) :
         self.host     = host
-        self.services = set(services or [])
+        self.services = set(self.bulkCast(services) or [])
 
         # An object is dirty if it hasn't yet been shared with it's neighbors.
         self.dirty_table = {n : True for n in neighbors or []}
@@ -17,7 +17,7 @@ class HostService :
     
 
     def __str__(self) -> str:
-        return f"row[{self.host}] : <{', '.join(self.createPacket())}>"
+        return f"row[{self.host}] : <{', '.join(self.servicesToStr())}>"
     
 
     def markDirtyExcept(self, host) :
@@ -27,7 +27,7 @@ class HostService :
 
 
     def updateServices(self, data, sender) :
-        if (services := set(data)) == self.services :
+        if (services := set(self.bulkCast(data))) == self.services :
             return
 
         self.services = services
@@ -36,8 +36,12 @@ class HostService :
         self.markDirtyExcept(self.origin)
     
 
-    def addService(self, service_name, host) :
-        self.services.add(service_name)
+    def addService(self, data, host) :
+        service_name = data["topic"]
+        service_type = ServiceType(data["service_type"])
+        new_service  = ServiceMetadata(service_name, service_type)
+
+        self.services.add(new_service)
         self.origin = host
         self.markDirtyExcept(self.origin)
 
@@ -55,4 +59,12 @@ class HostService :
 
 
     def createPacket(self) :
-        return list(self.services)
+        return list(map(lambda s : s.toJSON(), self.services))
+
+    
+    def servicesToStr(self) :
+        return list(map(lambda s : str(s), self.services))
+
+    
+    def bulkCast(self, services) :
+        return [ServiceMetadata.fromJSON(s) for s in services]

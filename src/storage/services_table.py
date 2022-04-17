@@ -75,10 +75,6 @@ class ServiceTable :
         self.lock.release()
 
 
-    def __isDone(self) :
-        return all(not v.isDirty() for v in self.table.values())
-
-
     def markNeighborUTD(self, neighbor) :
         # self.lock.acquire()
 
@@ -87,9 +83,9 @@ class ServiceTable :
         # self.lock.release()
 
 
-    def addServiceToHost(self, host, service_name) :
+    def addServiceToHost(self, host, data) :
         self.lock.acquire()
 
-        self.table[host].addService(service_name, host)
+        self.table[host].addService(data, host)
 
         self.lock.release()
