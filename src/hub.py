@@ -1,4 +1,3 @@
-from concurrent.futures import thread
 import socket
 import threading
 import time
@@ -8,7 +7,7 @@ import queue
 import uuid
 
 from networking  import Graph
-from common      import PacketType, QueueMessage, ServiceType, ConsumerAction, S
+from common      import PacketType, QueueMessage, ServiceType, S
 from storage     import ServiceTable, IOTHandler
 
 
@@ -45,7 +44,7 @@ class DBNode :
         # If IOT device is service or sensor, add to current host's 
         # services (will be broadcasted to neighbors).
         if data["service_type"] != ServiceType.CONSUMER :
-            self.table.addServiceToHost(self.host, data["topic"])
+            self.table.addServiceToHost(self.host, data)
 
         self.iot_db.handleRequest(data)
         
@@ -113,24 +112,6 @@ class DBNode :
                 print(error)
 
 
-    def prepareAdPacket(self, send_to) :
-        services, updateExists = self.table.createPacket(send_to)
-
-        message = {
-            "type"     : PacketType.DBH_ADVERT,
-            "services" : services,
-            "sender"   : self.host,
-            "message"  : f"hello from {self.host}",
-            "trans_id" : uuid.uuid4().hex
-        }
-
-        # Don't send ads if no updates avaiable for neighbor, send still alive message instead.
-        if not updateExists :
-            message["type"] = PacketType.DBH_NOT_DEAD
-
-        return bytes(json.dumps(message), S.ENCODING)
-
-
     def runAdverts(self) :
         # TODO: If we fail to send to a node, might need to be removed 
         # from neighbors/graph/everything.
@@ -140,21 +121,29 @@ class DBNode :
 
             for neighbor in self.graph.getNeighbors() :
 
-                try :
-                    # Start transaction, don't release until complete.
-                    self.table.lock.acquire()
+                # Start transaction, don't release until complete.
+                self.table.lock.acquire()
 
-                    # Prepare message, send, and update tracking to avoid redundant
-                    # data replication/transmission.
-                    message = self.prepareAdPacket(neighbor)
-                    self.sock_send.sendto(message, (neighbor, self.sport))
-                    self.table.markNeighborUTD(neighbor)
+                # Prepare message, send, and update tracking to avoid redundant
+                # data replication/transmission.
+                services, _ = self.table.createPacket(neighbor)
+                trans_id    = uuid.uuid4()
 
-                except socket.error as e :
-                    print(f"Error sending ad to {neighbor}: {e}")
-                
-                finally :
-                    self.table.lock.release()
+                message = json.dumps({
+                    "type"     : PacketType.DBH_ADVERT,
+                    "services" : services,
+                    "sender"   : self.host,
+                    "message"  : f"hello from {self.host}",
+                    "trans_id" : trans_id.hex
+                }).encode(S.ENCODING)
+
+                # self.sock_send.sendto(message, (neighbor, self.sport))
+                self.queue.put(
+                    QueueMessage(message=message, send_to=neighbor, trans_id=trans_id)
+                )
+
+                self.table.markNeighborUTD(neighbor)
+                self.table.lock.release()
             
 
     def sendQueueMessages(self) :
