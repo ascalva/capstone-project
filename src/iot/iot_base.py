@@ -75,7 +75,7 @@ class IOT_Base(ABC) :
     def invertDictOfLists(d) : 
         d_ = {}
         for k, v in d.items() :
-            d_.update({v_elt : k for v_elt in v})
+            d_.update({v_elt["name"] : k for v_elt in v}) # TODO
         return d_
     
 
