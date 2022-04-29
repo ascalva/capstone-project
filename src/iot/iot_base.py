@@ -24,14 +24,20 @@ class IOT_Base(ABC) :
         self.sport       = 8000
         self.sock        = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(("", self.sport))
-        self.sock.settimeout(5)  
+        self.sock.settimeout(3)  
 
 
-    def identifyBroker(self, msg_ = None, connect = True) :
+    def identifyBroker(self, msg_ = None, connect = True, known_hub=None, hostname_hint=True) :
         msg  = json.dumps(msg_).encode("utf-8")
         data = None
 
-        for n in self.network.neighbors :
+        # NOTE: For testing purposes, don't need to try connecting to all devices
+        #       in network. Speeds up the process when there are many local devices.
+        known_hub = None
+        if hostname_hint :
+            known_hub = [self.hostname.split("_")[0] + "_"]
+
+        for n in (known_hub or self.network.neighbors) :
             try :
                 self.sock.sendto(msg, (n, self.sport))
 
@@ -43,11 +49,13 @@ class IOT_Base(ABC) :
                     self.ad_node     = data["sender"]
                     self.broker_node = data["broker"]
                     if connect : self.connectToBroker()
+                    print("Found broker/ad node!")
                     break
             
             except socket.timeout as e :
-                print("Connection timeout, moving on to next neighbor..")
-                print(e)
+                # print("Connection timeout, moving on to next neighbor..")
+                # print(e)
+                continue
 
             except socket.error as e :
                 print("Socket error, something went wrong.")
