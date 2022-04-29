@@ -9,3 +9,8 @@ env
 **/*.PNG
 **/*.jpg
 **/*.jpeg
+
+# Data files
+data/
+**/data_*/
+**/consumer_*.txt
