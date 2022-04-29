@@ -8,6 +8,7 @@ class ServiceMetadata :
         self.type   = type
         self.cost   = cost
         self.params = params
+        self.depends_on = []
 
     def __repr__(self) -> str :
         return self.name
@@ -23,6 +24,13 @@ class ServiceMetadata :
 
     def toJSON(self) -> Dict[str, Any] :
         return self.__dict__
+    
+    def setDependance(self, dependence_lst) :
+        self.depends_on = dependence_lst
+    
+
+    def getEdges(self) :
+        return [(self.name, other) for other in self.depends_on]
 
     @staticmethod
     def fromJSON(dict_obj: Dict[str, Any]) :

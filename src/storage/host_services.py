@@ -1,3 +1,4 @@
+from itertools         import chain
 from common            import ServiceType
 from .service_metadata import ServiceMetadata
 
@@ -41,6 +42,10 @@ class HostService :
         service_type = ServiceType(data["service_type"])
         new_service  = ServiceMetadata(service_name, service_type)
 
+        if "depends_on" in data :
+            # TODO: Need to verify that services that are depended on exist.
+            new_service.setDependance(data["depends_on"])
+
         self.services.add(new_service)
         self.origin = host
         self.markDirtyExcept(self.origin)
@@ -68,3 +73,6 @@ class HostService :
     
     def bulkCast(self, services) :
         return [ServiceMetadata.fromJSON(s) for s in services]
+
+    def getEdges(self) :
+        return list(chain.from_iterable(s.getEdges() for s in self.services))

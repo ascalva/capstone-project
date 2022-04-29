@@ -1,4 +1,5 @@
 import threading
+import networkx as nx
 
 from .host_services import HostService
 from common         import RWLock
@@ -89,3 +90,11 @@ class ServiceTable :
         self.table[host].addService(data, host)
 
         self.lock.release()
+
+    def formDependencyGraph(self) :
+        g = nx.DiGraph()
+        g.add_edges_from(services.getEdges() for services in self.table.values())
+
+        cycles = list(nx.simple_cycles(g))
+
+        print(f"Number of cycles: {cycles}")
