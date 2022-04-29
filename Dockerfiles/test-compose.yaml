@@ -1,0 +1,1906 @@
+version: "3.8"
+
+#
+# NOTE: [A-Z]_ and [A-Z]_broker nodes should be added to networks: local-net-[A-Z] and universal-net
+#       All [A-Z]_iot_[1-9]+ should only be added to universal-net. The only exception are IoT devices
+#       that are also consumers
+#
+
+services:
+
+    ############################# A Services ###################################
+    A_broker:
+        image: eclipse-mosquitto:latest
+        container_name: A_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        restart: always
+        tty: true
+        networks:
+            local-net-A:
+                # ipv4_address: 172.16.2.2
+            universal-net:
+    
+    A_iot_1:
+        command: python3 src/start_iot.py
+        container_name: A_iot_1
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_1
+            TOPIC:    temperature
+            IOT_TYPE: sensor
+            SLEEP: 7
+        networks:
+            local-net-A:
+
+    A_iot_2:
+        command: python3 src/start_iot.py
+        container_name: A_iot_2
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_2
+            TOPIC:    average
+            IOT_TYPE: service
+            SLEEP: 7
+        networks:
+            local-net-A:
+            universal-net:
+    
+    A_:
+        container_name: A_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: A_
+            VERBOSE_TABLE: "false"
+        networks:
+            local-net-A:
+                # ipv4_address: 172.16.2.6
+            universal-net:
+
+    C_:
+        container_name: C_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: C_
+            VERBOSE_TABLE: "false"
+        networks:
+            local-net-C:
+                # ipv4_address: 172.16.2.6
+            universal-net:
+
+
+    C_iot_1:
+        command: python3 src/start_iot.py
+        container_name: C_iot_1
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: C_iot_1
+            TOPIC:    times_2
+            IOT_TYPE: service
+            SLEEP:    7
+        networks:
+            local-net-C:
+            universal-net:
+
+    D_:
+        container_name: D_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: D_
+            VERBOSE_TABLE: "false"
+        networks:
+            local-net-D:
+                # ipv4_address: 172.16.2.6
+            universal-net:
+
+
+    D_iot_1:
+        command: python3 src/start_iot.py
+        container_name: D_iot_1
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: D_iot_1
+            TOPIC:    power_2
+            IOT_TYPE: service
+            SLEEP:    7
+        networks:
+            local-net-D:
+    ############################# B Services ###################################
+    B_:
+        container_name: B_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: B_
+            VERBOSE_TABLE: "false"
+        networks:
+            local-net-B:
+            universal-net:
+        
+    B_broker:
+        image: eclipse-mosquitto:latest
+        container_name: B_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        restart: always
+        tty: true
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    B_iot_0:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_0
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_0
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_1:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_1
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_1
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    B_iot_2:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_2
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_2
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_3:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_3
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_3
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_4:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_4
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_4
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_5:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_5
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_5
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_6:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_6
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_6
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_7:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_7
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_7
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_8:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_8
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_8
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_9:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_9
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_9
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_10:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_10
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_10
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_11:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_11
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_11
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_12:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_12
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_12
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_13:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_13
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_13
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_14:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_14
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_14
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_15:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_15
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_15
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_16:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_16
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_16
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_17:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_17
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_17
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_18:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_18
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_18
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_19:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_19
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_19
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    B_iot_20:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_20
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_20
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_21:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_21
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_21
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_22:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_22
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_22
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_23:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_23
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_23
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_24:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_24
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_24
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_25:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_25
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_25
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_26:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_26
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_26
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_27:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_27
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_27
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_28:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_28
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_28
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_29:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_29
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_29
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    B_iot_30:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_30
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_30
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_31:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_31
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_31
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_32:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_32
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_32
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_33:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_33
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_33
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_34:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_34
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_34
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_35:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_35
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_35
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_36:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_36
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_36
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_37:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_37
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_37
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_38:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_38
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_38
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_39:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_39
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_39
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_40:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_40
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_40
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_41:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_41
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_41
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_42:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_42
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_42
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_43:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_43
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_43
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_44:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_44
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_44
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_45:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_45
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_45
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_46:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_46
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_46
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_47:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_47
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_47
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_48:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_48
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_48
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_49:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_49
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_49
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_50:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_50
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_50
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_51:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_51
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_51
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    B_iot_52:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_52
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_52
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_53:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_53
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_53
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_54:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_54
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_54
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_55:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_55
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_55
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_56:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_56
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_56
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_57:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_57
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_57
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_58:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_58
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_58
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_59:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_59
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_59
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_60:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_60
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_60
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_61:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_61
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_61
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_62:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_62
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_62
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_63:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_63
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_63
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_64:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_64
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_64
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_65:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_65
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_65
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_66:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_66
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_66
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_67:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_67
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_67
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_68:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_68
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_68
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_69:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_69
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_69
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    20
+        networks:
+            local-net-B:
+            universal-net:
+
+
+    # B_iot_70:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_70
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_70
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_71:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_71
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_71
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_72:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_72
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_72
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_73:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_73
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_73
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_74:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_74
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_74
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_75:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_75
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_75
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_76:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_76
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_76
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_77:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_77
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_77
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_78:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_78
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_78
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_79:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_79
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_79
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+
+    # B_iot_80:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_80
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_80
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_81:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_81
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_81
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_82:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_82
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_82
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_83:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_83
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_83
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_84:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_84
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_84
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_85:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_85
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_85
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_86:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_86
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_86
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_87:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_87
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_87
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_88:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_88
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_88
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_89:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_89
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_89
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_90:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_90
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_90
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_91:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_91
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_91
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_92:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_92
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_92
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_93:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_93
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_93
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_94:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_94
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_94
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_95:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_95
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_95
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_96:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_96
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_96
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_97:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_97
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_97
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_98:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_98
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_98
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+    # B_iot_99:
+    #     image: base_node
+    #     command: python3 src/start_iot.py
+    #     container_name: B_iot_99
+    #     image: iot_client
+    #     volumes:
+    #         - ./:/app
+    #     tty: true
+    #     environment:
+    #         HOSTNAME: B_iot_99
+    #         TOPIC:    temperature_consumer
+    #         IOT_TYPE: consumer
+    #         SLEEP:    20
+    #     networks:
+    #         local-net-B:
+    #         universal-net:
+
+
+
+networks:
+    universal-net:
+      external: false
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.16.1.0/24
+            gateway: 172.16.1.1
+
+    local-net-A:
+        external: false
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.16.2.0/24
+                  gateway: 172.16.2.1
+
+    local-net-B:
+        external: false
+        ipam: 
+            driver: default
+            config:
+                - subnet: 172.16.3.0/24
+                  gateway: 172.16.3.1
+
+    local-net-C:
+        external: false
+        ipam: 
+            driver: default
+            config:
+                - subnet: 172.16.4.0/24
+                  gateway: 172.16.4.1
+
+    local-net-D:
+        external: false
+        ipam: 
+            driver: default
+            config:
+                - subnet: 172.16.5.0/24
+                  gateway: 172.16.5.1

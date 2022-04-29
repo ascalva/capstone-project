@@ -1,0 +1,133 @@
+version: "3.8"
+
+#
+# NOTE: [A-Z]_ and [A-Z]_broker nodes should be added to networks: local-net-[A-Z] and universal-net
+#       All [A-Z]_iot_[1-9]+ should only be added to universal-net. The only exception are IoT devices
+#       that are also consumers
+#
+
+services:
+
+    ############################# A Services ###################################
+    A_broker:
+        image: eclipse-mosquitto:latest
+        container_name: A_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        restart: always
+        tty: true
+        networks:
+            local-net-A:
+                # ipv4_address: 172.16.2.2
+            universal-net:
+    
+    A_iot_1:
+        command: python3 src/start_iot.py
+        container_name: A_iot_1
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_1
+            TOPIC:    temperature
+            IOT_TYPE: sensor
+        networks:
+            local-net-A:
+
+    A_iot_2:
+        command: python3 src/start_iot.py
+        container_name: A_iot_2
+        image: base_node
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: A_iot_2
+            TOPIC:    average
+            IOT_TYPE: service
+        networks:
+            local-net-A:
+    
+    A_:
+        container_name: A_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: A_
+            VERBOSE_TABLE: "true"
+        networks:
+            local-net-A:
+                # ipv4_address: 172.16.2.6
+            universal-net:
+
+    ############################# B Services ###################################
+    B_:
+        container_name: B_
+        image: base_node
+        command: python3 src/hub.py
+        tty: true
+        volumes:
+            - ./:/app
+        environment:
+            HOSTNAME: B_
+            VERBOSE_TABLE: "true"
+        networks:
+            local-net-B:
+            universal-net:
+        
+    B_broker:
+        image: eclipse-mosquitto:latest
+        container_name: B_broker
+        volumes:
+            - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        restart: always
+        tty: true
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_1:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_1
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_1
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    10
+        networks:
+            local-net-B:
+            universal-net:
+
+networks:
+    universal-net:
+      external: false
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.16.1.0/24
+            gateway: 172.16.1.1
+
+    local-net-A:
+        external: false
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.16.2.0/24
+                  gateway: 172.16.2.1
+
+    local-net-B:
+        external: false
+        ipam: 
+            driver: default
+            config:
+                - subnet: 172.16.3.0/24
+                  gateway: 172.16.3.1
