@@ -107,7 +107,8 @@ class IOTHandler :
         for device in self.__devices_by_service.values() :
             found_match |= device.checkTransactionID(res_id, data)
         
-        print(f"!!! Transaction IDs match: {found_match}")
+        # print(f"!!! Transaction IDs match: {found_match}")
+        return found_match
 
 
 class DeviceInterface :
