@@ -98,7 +98,7 @@ class DBNode :
 
 
     def listen(self) :
-
+        print(f"## Started listening, ready to accept connections!")
         while True :
             try :
                 data = self.sock_recv.recv(S.PACKET_SIZE)

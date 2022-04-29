@@ -8,7 +8,7 @@ if __name__ == "__main__" :
     
     # Wait before creating IOT device.
     sleep_time = int(os.environ.get("SLEEP", "0"))
-    time.sleep(sleep_time)
+    time.sleep(sleep_time + 20)
 
     # Get IOT device and start.
     IOT_Factory()[iot_type](topic=topic)
