@@ -1,12 +1,12 @@
 version: "3.8"
 
-services:
+#
+# NOTE: [A-Z]_ and [A-Z]_broker nodes should be added to networks: local-net-[A-Z] and universal-net
+#       All [A-Z]_iot_[1-9]+ should only be added to universal-net. The only exception are IoT devices
+#       that are also consumers
+#
 
-    # dummy:
-    #     build:
-    #         context: .
-    #         dockerfile: ./Dockerfiles/client.Dockerfile
-    #     image: base_node
+services:
 
     ############################# A Services ###################################
     A_broker:
@@ -24,10 +24,7 @@ services:
             universal-net:
     
     A_iot_1:
-        # build:
-        #     context: .
-        #     dockerfile: ./Dockerfiles/client.Dockerfile
-        command: python3 src/iot_service.py
+        command: python3 src/start_iot.py
         container_name: A_iot_1
         image: base_node
         volumes:
@@ -36,14 +33,12 @@ services:
         environment:
             HOSTNAME: A_iot_1
             TOPIC:    temperature
+            IOT_TYPE: sensor
         networks:
             local-net-A:
 
     A_iot_2:
-        # build:
-        #     context: .
-        #     dockerfile: ./Dockerfiles/client.Dockerfile
-        command: python3 src/iot_service.py
+        command: python3 src/start_iot.py
         container_name: A_iot_2
         image: base_node
         volumes:
@@ -51,14 +46,12 @@ services:
         tty: true
         environment:
             HOSTNAME: A_iot_2
-            TOPIC:    pressure
+            TOPIC:    average
+            IOT_TYPE: service
         networks:
             local-net-A:
     
     A_:
-        # build:
-        #     context: .
-        #     dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: A_
         image: base_node
         command: python3 src/hub.py
@@ -75,9 +68,6 @@ services:
 
     ############################# B Services ###################################
     B_:
-        # build:
-        #     context: .
-        #     dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: B_
         image: base_node
         command: python3 src/hub.py
@@ -96,8 +86,6 @@ services:
         container_name: B_broker
         volumes:
             - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-    #         - /mosquitto/data
-    #         - /mosquitto/log
         restart: always
         tty: true
         networks:
@@ -105,10 +93,8 @@ services:
             universal-net:
 
     B_iot_1:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
-        command: python3 src/iot_service.py
+        image: base_node
+        command: python3 src/start_iot.py
         container_name: B_iot_1
         image: iot_client
         volumes:
@@ -116,17 +102,68 @@ services:
         tty: true
         environment:
             HOSTNAME: B_iot_1
-            TOPIC:    baby_monitor
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    10
         networks:
             local-net-B:
+            universal-net:
+
+    B_iot_2:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_2
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_2
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    10
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_3:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_3
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_3
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    10
+        networks:
+            local-net-B:
+            universal-net:
+
+    B_iot_4:
+        image: base_node
+        command: python3 src/start_iot.py
+        container_name: B_iot_4
+        image: iot_client
+        volumes:
+            - ./:/app
+        tty: true
+        environment:
+            HOSTNAME: B_iot_4
+            TOPIC:    temperature_consumer
+            IOT_TYPE: consumer
+            SLEEP:    10
+        networks:
+            local-net-B:
+            universal-net:
 
     ########################### Other Services #################################
     C_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: C_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
@@ -138,11 +175,8 @@ services:
             universal-net:
 
     D_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: D_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
@@ -154,11 +188,8 @@ services:
             universal-net:
 
     E_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: E_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
@@ -170,11 +201,8 @@ services:
             universal-net:
 
     F_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: F_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
@@ -186,11 +214,8 @@ services:
             universal-net:
 
     G_:
-        build:
-            context: .
-            dockerfile: ./Dockerfiles/client.Dockerfile
         container_name: G_
-        image: db_node
+        image: base_node
         command: python3 src/hub.py
         tty: true
         volumes:
